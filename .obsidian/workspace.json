@@ -11,10 +11,14 @@
             "id": "9b13af824d609220",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Без названия.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Новая вкладка"
+              "title": "Без названия"
             }
           }
         ]
@@ -199,6 +203,7 @@
   },
   "active": "9b13af824d609220",
   "lastOpenFiles": [
+    "Без названия.md",
     "01_WORLD/Фракции/Кланы Двуречья/Кланы Двуречья.md",
     "01_WORLD/Карта мира.md",
     "01_WORLD/Фракции/Морской Союз/Локации/Рыбачий Поселок.md",
@@ -233,7 +238,6 @@
     "07_WORLD_STATE/Активные события.md",
     "07_WORLD_STATE/Текущая дата мира.md",
     "07_WORLD_STATE/Фракции состояние.md",
-    "99_META/Календарь мира.md",
     "06_VISUALS/Карты/Карта v.1.png",
     "Site",
     "06_VISUALS/Лого/Лого.png",
