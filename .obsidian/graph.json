@@ -6,17 +6,39 @@
   "hideUnresolved": false,
   "showOrphans": true,
   "collapse-color-groups": true,
-  "colorGroups": [],
+  "colorGroups": [
+    {
+      "query": "file:Кланы Двуречья",
+      "color": {
+        "a": 1,
+        "rgb": 14701138
+      }
+    },
+    {
+      "query": "file:Орда Трех Костров",
+      "color": {
+        "a": 1,
+        "rgb": 14725458
+      }
+    },
+    {
+      "query": "file:Морской Союз",
+      "color": {
+        "a": 1,
+        "rgb": 4742859
+      }
+    }
+  ],
   "collapse-display": true,
   "showArrow": false,
   "textFadeMultiplier": 0,
   "nodeSizeMultiplier": 1,
   "lineSizeMultiplier": 1,
-  "collapse-forces": true,
-  "centerStrength": 0.518713248970312,
-  "repelStrength": 10,
+  "collapse-forces": false,
+  "centerStrength": 0.5,
+  "repelStrength": 13.8541666666667,
   "linkStrength": 1,
-  "linkDistance": 250,
-  "scale": 1.9655560456566594,
+  "linkDistance": 248,
+  "scale": 0.9999999999999877,
   "close": true
 }
