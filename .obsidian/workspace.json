@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01_Мироустройство (Константы)/Флора и Мегафауна.md.md",
+                "file": "Site/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Флора и Мегафауна.md"
+              "title": "README"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Мироустройство (Константы)/Флора и Мегафауна.md.md",
+                "file": "Site/README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Обратные ссылки для Флора и Мегафауна.md"
+              "title": "Обратные ссылки для README"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "01_Мироустройство (Константы)/Флора и Мегафауна.md.md",
+                "file": "Site/README.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Исходящие ссылки из Флора и Мегафауна.md"
+              "title": "Исходящие ссылки из README"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Мироустройство (Константы)/Флора и Мегафауна.md.md",
+                "file": "Site/README.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Структура Флора и Мегафауна.md"
+              "title": "Структура README"
             }
           },
           {
@@ -207,46 +207,48 @@
       "agentfiles:Agentfiles": false
     }
   },
-  "active": "7dccc79faea22d12",
+  "active": "b71b6db1cb39e4dd",
   "lastOpenFiles": [
-    "tree_output.txt",
-    "00_CORE",
-    "copilot/copilot-conversations/Привет,_нужно_разработать_логику_флоры_и_фау@20260602_004309.md",
-    "copilot/copilot-conversations",
-    "copilot/copilot-custom-prompts/Clip Web Page.md",
-    "copilot/copilot-custom-prompts/Clip YouTube Transcript.md",
-    "copilot/copilot-custom-prompts/Rewrite as tweet thread.md",
-    "copilot/copilot-custom-prompts/Rewrite as tweet.md",
-    "copilot/copilot-custom-prompts/Remove URLs.md",
-    "copilot/copilot-custom-prompts/Generate glossary.md",
-    "copilot/copilot-custom-prompts/Generate table of contents.md",
-    "copilot/copilot-custom-prompts/Make longer.md",
-    "copilot/copilot-custom-prompts/Make shorter.md",
-    "copilot/copilot-custom-prompts/Emojify.md",
-    "copilot/copilot-custom-prompts/Explain like I am 5.md",
-    "copilot/copilot-custom-prompts/Simplify.md",
-    "copilot/copilot-custom-prompts/Summarize.md",
-    "copilot/copilot-custom-prompts/Translate to Chinese.md",
-    "copilot/copilot-custom-prompts/Fix grammar and spelling.md",
-    "copilot/copilot-custom-prompts",
-    "copilot",
-    "Без названия.canvas",
-    "Без названия.base",
-    "99_Дополнительные файлы/Лого.png",
-    "01_Мироустройство (Константы)/Флора и Мегафауна.md.md",
-    "99_Дополнительные файлы",
-    "10_Карты/Карта v.1.png",
-    "01_Мироустройство (Константы)/Время и Летоисчисление.md.md",
-    "01_Мироустройство (Константы)/Глобальная География.md.md",
-    "01_Мироустройство (Константы)/Система Истока и Ранги.md.md",
-    "01_Мироустройство (Константы)/Система Оружия и Классы.md.md",
-    "Запретные Земли.md",
-    "01_Мироустройство (Константы)/Фракции мира.md.md",
-    "10_Карты",
     "02_Хроника (Стабильная История)/Глобальный_Таймлайн.md.md",
-    "03_Истории (Отдельные истории)/Проект_01_Наемники/Персонажи.md",
-    "03_Истории (Отдельные истории)/Проект_02_Купцы",
-    "03_Истории (Отдельные истории)/Проект_01_Наемники",
-    "03_Истории (Отдельные истории)"
+    "Site/README.md",
+    "Site",
+    "Bot/README.md",
+    "Bot",
+    "99_META/Календарь_мира.md",
+    "99_META/Синхронизация_времени.md",
+    "99_META",
+    "07_WORLD_STATE/Фракции_состояние.md",
+    "07_WORLD_STATE/Текущая_дата_мира.md",
+    "07_WORLD_STATE/Активные_события.md",
+    "07_WORLD_STATE",
+    "06_VISUALS/Лого/Лого.png",
+    "06_VISUALS/Карты/Карта v.1.png",
+    "06_VISUALS/Лого",
+    "06_VISUALS/Карты",
+    "06_VISUALS",
+    "05_STORIES/Арка_1.md",
+    "05_STORIES",
+    "04_CHARACTERS/Шаблон.md",
+    "04_CHARACTERS",
+    "03_TIMELINE/События/0001.md",
+    "03_TIMELINE/События",
+    "03_TIMELINE/Глобальный_таймлайн.md",
+    "02_SYSTEMS/Резонансы.md",
+    "02_SYSTEMS/Ранги.md",
+    "02_SYSTEMS/Профили_силы.md",
+    "02_SYSTEMS/Оружие.md",
+    "02_SYSTEMS/Выгорание.md",
+    "01_WORLD/Factions/Орда_Трех_Костров.md",
+    "01_WORLD/Factions/Морской_Союз.md",
+    "01_WORLD/Factions/Кланы_Двуречья.md",
+    "01_WORLD/Флора_и_Фауна.md",
+    "01_WORLD/Карта_мира.md",
+    "00_CORE/Цена_силы.md",
+    "00_CORE/Физика_Истока.md",
+    "00_CORE/Мир.md",
+    "00_CORE/Основные_законы.md",
+    "Без названия.canvas",
+    "99_Дополнительные файлы/Лого.png",
+    "10_Карты/Карта v.1.png"
   ]
 }
