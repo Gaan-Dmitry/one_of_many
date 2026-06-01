@@ -157,9 +157,19 @@
               "icon": "lucide-list",
               "title": "Структура"
             }
+          },
+          {
+            "id": "ab5ab6e23000ac5a",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
@@ -177,7 +187,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "a6682aa5894020c2",
+  "active": "b71b6db1cb39e4dd",
   "lastOpenFiles": [
     "Без названия.canvas",
     "Без названия.base",
