@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Site/README.md",
+                "file": "Bot/README.md",
                 "mode": "source",
                 "source": false
               },
@@ -201,8 +201,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "9b13af824d609220",
+  "active": "7dccc79faea22d12",
   "lastOpenFiles": [
+    "Site/README.md",
     "Site/index 1.php",
     "01_WORLD/Фракции - Кланы Двуречья.md",
     "01_WORLD/Фракции - Морской Союз.md",
@@ -238,7 +239,6 @@
     "01_WORLD/Фракции/Кланы Двуречья/Персонажи",
     "01_WORLD/Фракции/Орда Трех Костров",
     "01_WORLD/Фракции/Морской Союз",
-    "01_WORLD/Фракции/Кланы Двуречья",
     "06_VISUALS/Карты/Карта v.1.png",
     "06_VISUALS/Лого/Лого.png",
     "Без названия.canvas",
