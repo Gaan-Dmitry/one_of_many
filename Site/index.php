@@ -25,6 +25,7 @@ $isDay = ($h >= 6 && $h < 18);
 
 $storageDir = __DIR__ . '/data';
 $storageFile = $storageDir . '/stories.json';
+$repoRoot = dirname(__DIR__);
 
 if (!is_dir($storageDir)) {
     mkdir($storageDir, 0775, true);
@@ -73,58 +74,262 @@ function excerpt(string $text, int $limit = 210): string
     return mb_substr($plain, 0, $limit - 1) . '…';
 }
 
-function loadLoreCards(): array
+function isSafeMarkdownPath(string $relativePath): bool
 {
-    $root = dirname(__DIR__);
-    $sources = [
-        'Глобальный таймлайн' => '03_TIMELINE/Глобальный таймлайн.md',
-        'Активные события' => '07_WORLD_STATE/Активные события.md',
-        'Флора и фауна' => '01_WORLD/Флора и Фауна.md',
-        'Арка 1' => '05_STORIES/Арка_1.md',
-    ];
+    if ($relativePath === '' || str_ends_with($relativePath, '/')) {
+        return false;
+    }
 
-    $cards = [];
-    foreach ($sources as $title => $relativePath) {
-        $path = $root . '/' . $relativePath;
-        if (!file_exists($path)) {
+    if (!str_ends_with(mb_strtolower($relativePath), '.md')) {
+        return false;
+    }
+
+    if (str_starts_with($relativePath, '/') || preg_match('/(^|\/)\.\.($|\/)/', $relativePath)) {
+        return false;
+    }
+
+    foreach (explode('/', $relativePath) as $segment) {
+        if ($segment === '' || str_starts_with($segment, '.')) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function markdownAbsolutePath(string $root, string $relativePath): ?string
+{
+    $relativePath = trim(str_replace('\\', '/', $relativePath));
+    if (!isSafeMarkdownPath($relativePath)) {
+        return null;
+    }
+
+    $absolute = $root . '/' . $relativePath;
+    $directory = dirname($absolute);
+    $existingDirectory = $directory;
+    while (!is_dir($existingDirectory) && $existingDirectory !== dirname($existingDirectory)) {
+        $existingDirectory = dirname($existingDirectory);
+    }
+
+    $realRoot = realpath($root);
+    $realDirectory = realpath($existingDirectory);
+
+    if ($realRoot === false || $realDirectory === false || !str_starts_with($realDirectory, $realRoot)) {
+        return null;
+    }
+
+    return $absolute;
+}
+
+function listMarkdownFiles(string $root): array
+{
+    $files = [];
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveCallbackFilterIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+            function (SplFileInfo $current): bool {
+                $name = $current->getFilename();
+                if ($name === '.git' || $name === '.obsidian' || str_starts_with($name, '.')) {
+                    return false;
+                }
+
+                if ($current->isDir() && in_array($name, ['data', 'vendor', 'node_modules'], true)) {
+                    return false;
+                }
+
+                return true;
+            }
+        )
+    );
+
+    foreach ($iterator as $file) {
+        if (!$file->isFile() || mb_strtolower($file->getExtension()) !== 'md') {
             continue;
         }
 
-        $content = file_get_contents($path);
-        if ($content === false) {
+        $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
+        $files[] = [
+            'path' => $relative,
+            'title' => pathinfo($file->getFilename(), PATHINFO_FILENAME),
+            'updated_at' => $file->getMTime(),
+            'size' => $file->getSize(),
+        ];
+    }
+
+    usort($files, fn(array $a, array $b): int => strcmp($a['path'], $b['path']));
+    return $files;
+}
+
+function readMarkdownFile(string $root, string $relativePath): ?array
+{
+    $absolute = markdownAbsolutePath($root, $relativePath);
+    if ($absolute === null || !is_file($absolute)) {
+        return null;
+    }
+
+    $content = file_get_contents($absolute);
+    if ($content === false) {
+        return null;
+    }
+
+    return [
+        'path' => $relativePath,
+        'title' => pathinfo($relativePath, PATHINFO_FILENAME),
+        'content' => $content,
+        'updated_at' => filemtime($absolute) ?: time(),
+    ];
+}
+
+function writeMarkdownFile(string $root, string $relativePath, string $content): bool
+{
+    $absolute = markdownAbsolutePath($root, $relativePath);
+    if ($absolute === null) {
+        return false;
+    }
+
+    $directory = dirname($absolute);
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+
+    return file_put_contents($absolute, $content, LOCK_EX) !== false;
+}
+
+function renderMarkdown(string $markdown): string
+{
+    $lines = preg_split('/\R/u', $markdown) ?: [];
+    $html = '';
+    $inList = false;
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '') {
+            if ($inList) {
+                $html .= '</ul>';
+                $inList = false;
+            }
+            continue;
+        }
+
+        if (preg_match('/^(#{1,3})\s+(.+)$/u', $trimmed, $matches)) {
+            if ($inList) {
+                $html .= '</ul>';
+                $inList = false;
+            }
+            $level = strlen($matches[1]);
+            $html .= '<h' . $level . '>' . e($matches[2]) . '</h' . $level . '>';
+            continue;
+        }
+
+        if (preg_match('/^[-*]\s+(.+)$/u', $trimmed, $matches)) {
+            if (!$inList) {
+                $html .= '<ul>';
+                $inList = true;
+            }
+            $html .= '<li>' . e($matches[1]) . '</li>';
+            continue;
+        }
+
+        if ($inList) {
+            $html .= '</ul>';
+            $inList = false;
+        }
+        $html .= '<p>' . e($trimmed) . '</p>';
+    }
+
+    if ($inList) {
+        $html .= '</ul>';
+    }
+
+    return $html;
+}
+
+function loadLoreCards(array $markdownFiles, string $root): array
+{
+    $priority = ['03_TIMELINE/', '07_WORLD_STATE/', '01_WORLD/', '00_CORE/', '05_STORIES/'];
+    $cards = [];
+
+    foreach ($markdownFiles as $file) {
+        $score = 99;
+        foreach ($priority as $index => $prefix) {
+            if (str_starts_with($file['path'], $prefix)) {
+                $score = $index;
+                break;
+            }
+        }
+        if ($score === 99) {
+            continue;
+        }
+
+        $document = readMarkdownFile($root, $file['path']);
+        if ($document === null) {
             continue;
         }
 
         $cards[] = [
-            'title' => $title,
-            'path' => $relativePath,
-            'excerpt' => excerpt($content, 360),
+            'title' => $file['title'],
+            'path' => $file['path'],
+            'excerpt' => excerpt($document['content'], 360),
+            'score' => $score,
         ];
     }
 
-    return $cards;
+    usort($cards, fn(array $a, array $b): int => $a['score'] <=> $b['score'] ?: strcmp($a['path'], $b['path']));
+    return array_slice($cards, 0, 12);
 }
 
-function buildPrompt(string $mode, string $title, string $content, string $notes, array $loreCards): string
+function buildMarkdownContext(array $markdownFiles, string $root, string $selectedPath = '', int $limit = 14000): string
+{
+    $parts = [];
+    $remaining = $limit;
+
+    if ($selectedPath !== '') {
+        $selected = readMarkdownFile($root, $selectedPath);
+        if ($selected !== null) {
+            $text = mb_substr($selected['content'], 0, min($remaining, 5000));
+            $parts[] = "[Открытый MD: {$selected['path']}]\n" . $text;
+            $remaining -= mb_strlen($text);
+        }
+    }
+
+    foreach ($markdownFiles as $file) {
+        if ($remaining <= 0 || $file['path'] === $selectedPath) {
+            continue;
+        }
+
+        $document = readMarkdownFile($root, $file['path']);
+        if ($document === null) {
+            continue;
+        }
+
+        $excerpt = excerpt($document['content'], 900);
+        $chunk = "[{$file['path']}]\n" . $excerpt;
+        if (mb_strlen($chunk) > $remaining) {
+            $chunk = mb_substr($chunk, 0, $remaining);
+        }
+        $parts[] = $chunk;
+        $remaining -= mb_strlen($chunk);
+    }
+
+    return implode("\n\n---\n\n", $parts);
+}
+
+function buildPrompt(string $mode, string $title, string $content, string $notes, string $markdownContext): string
 {
     $labels = [
         'story' => 'Продолжи сцену и предложи 3 варианта развития истории.',
         'event' => 'Опиши событие: причины, участников, последствия и крючки для сюжета.',
         'flora_fauna' => 'Опиши флору или фауну: внешний вид, поведение, среду обитания, опасности и применение в сюжете.',
+        'markdown' => 'Проанализируй открытый markdown-файл, предложи правки, дополнения и связи с лором.',
     ];
 
-    $context = array_map(
-        fn(array $card): string => $card['title'] . ': ' . $card['excerpt'],
-        $loreCards
-    );
-
     return implode("\n\n", [
-        'Ты — литературный помощник для мира «Век Истока». Пиши атмосферно, по-русски, без противоречий с контекстом.',
+        'Ты — литературный помощник для мира «Век Истока». Пиши атмосферно, по-русски, без противоречий с markdown-контекстом.',
         'Задача: ' . ($labels[$mode] ?? $labels['story']),
         'Название: ' . $title,
-        'Черновик автора: ' . $content,
+        'Черновик автора или открытый MD: ' . $content,
         'Заметки автора: ' . $notes,
-        'Контекст мира: ' . implode("\n", $context),
+        'Доступные сведения из markdown-файлов мира, лора, событий и историй: ' . $markdownContext,
     ]);
 }
 
@@ -133,6 +338,7 @@ function requestAiSuggestion(string $prompt): array
     $apiKey = getenv('DASHSCOPE_API_KEY') ?: '';
     $endpoint = getenv('DASHSCOPE_API_ENDPOINT') ?: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
     $model = getenv('DASHSCOPE_MODEL') ?: 'qwen-plus';
+    $timeout = max(8, min(60, (int) (getenv('DASHSCOPE_API_TIMEOUT') ?: 20)));
 
     if ($apiKey === '') {
         return [
@@ -168,7 +374,8 @@ function requestAiSuggestion(string $prompt): array
             'Content-Type: application/json',
             'Authorization: Bearer ' . $apiKey,
         ],
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT => $timeout,
     ]);
 
     $response = curl_exec($ch);
@@ -179,7 +386,7 @@ function requestAiSuggestion(string $prompt): array
     if ($response === false || $status >= 400) {
         return [
             'ok' => false,
-            'message' => 'API не вернул успешный ответ' . ($error ? ': ' . $error : '.') . ' HTTP: ' . $status,
+            'message' => 'API не вернул успешный ответ' . ($error ? ': ' . $error : '.') . ' HTTP: ' . $status . '. Проверьте endpoint, ключ и доступность модели; лимит ожидания: ' . $timeout . ' сек.',
             'prompt' => $prompt,
         ];
     }
@@ -195,9 +402,17 @@ function requestAiSuggestion(string $prompt): array
 }
 
 $stories = readStories($storageFile);
-$loreCards = loadLoreCards();
+$markdownFiles = listMarkdownFiles($repoRoot);
+$selectedMarkdownPath = (string) ($_GET['md'] ?? ($markdownFiles[0]['path'] ?? ''));
+$selectedMarkdown = $selectedMarkdownPath !== '' ? readMarkdownFile($repoRoot, $selectedMarkdownPath) : null;
+if ($selectedMarkdown === null && count($markdownFiles) > 0) {
+    $selectedMarkdownPath = $markdownFiles[0]['path'];
+    $selectedMarkdown = readMarkdownFile($repoRoot, $selectedMarkdownPath);
+}
+$loreCards = loadLoreCards($markdownFiles, $repoRoot);
 $notice = '';
 $aiResult = null;
+$markdownPreviewHtml = $selectedMarkdown !== null ? renderMarkdown($selectedMarkdown['content']) : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrf = $_POST['csrf'] ?? '';
@@ -229,12 +444,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if ($action === 'ask_ai') {
-            $title = trim((string) ($_POST['title'] ?? 'Без названия'));
-            $mode = trim((string) ($_POST['category'] ?? 'story'));
-            $content = trim((string) ($_POST['content'] ?? ''));
-            $notes = trim((string) ($_POST['notes'] ?? ''));
-            $prompt = buildPrompt($mode, $title, $content, $notes, $loreCards);
+        if ($action === 'save_md') {
+            $mdPath = trim(str_replace('\\', '/', (string) ($_POST['md_path'] ?? '')));
+            $mdContent = (string) ($_POST['md_content'] ?? '');
+
+            if (writeMarkdownFile($repoRoot, $mdPath, $mdContent)) {
+                $notice = 'Markdown-файл сохранён: ' . $mdPath;
+                $markdownFiles = listMarkdownFiles($repoRoot);
+                $selectedMarkdownPath = $mdPath;
+                $selectedMarkdown = readMarkdownFile($repoRoot, $selectedMarkdownPath);
+                $markdownPreviewHtml = $selectedMarkdown !== null ? renderMarkdown($selectedMarkdown['content']) : '';
+                $loreCards = loadLoreCards($markdownFiles, $repoRoot);
+            } else {
+                $notice = 'Не удалось сохранить MD. Используйте безопасный относительный путь с расширением .md.';
+            }
+        }
+
+        if ($action === 'ask_ai' || $action === 'ask_ai_md') {
+            $mdPath = trim(str_replace('\\', '/', (string) ($_POST['md_path'] ?? $selectedMarkdownPath)));
+            $markdownContext = buildMarkdownContext($markdownFiles, $repoRoot, $mdPath);
+            if ($action === 'ask_ai_md') {
+                $title = 'Markdown: ' . ($mdPath !== '' ? $mdPath : 'без файла');
+                $mode = 'markdown';
+                $content = (string) ($_POST['md_content'] ?? '');
+                $notes = 'Нужно помочь с редактированием MD-файла и связями с лором.';
+            } else {
+                $title = trim((string) ($_POST['title'] ?? 'Без названия'));
+                $mode = trim((string) ($_POST['category'] ?? 'story'));
+                $content = trim((string) ($_POST['content'] ?? ''));
+                $notes = trim((string) ($_POST['notes'] ?? ''));
+            }
+            $prompt = buildPrompt($mode, $title, $content, $notes, $markdownContext);
             $aiResult = requestAiSuggestion($prompt);
         }
     }
@@ -252,9 +492,6 @@ $categoryLabels = [
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ВЕК ИСТОКА — хроника историй</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
     --gold: #c9a24b;
@@ -275,7 +512,7 @@ body {
     min-height: 100vh;
     background: var(--ink);
     color: var(--text);
-    font-family: 'Unbounded', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     overflow-x: hidden;
 }
 
@@ -313,10 +550,8 @@ canvas {
 
 .hero {
     display: grid;
-    grid-template-columns: minmax(280px, 1fr) auto;
-    gap: 24px;
-    align-items: stretch;
-    margin-bottom: 28px;
+    gap: 18px;
+    margin-bottom: 18px;
 }
 
 .brand, .clock, .panel {
@@ -355,8 +590,8 @@ canvas {
 
 h1 {
     margin: 0;
-    font-size: clamp(34px, 6vw, 82px);
-    line-height: 0.95;
+    font-size: clamp(30px, 5vw, 58px);
+    line-height: 1.05;
     max-width: 900px;
 }
 
@@ -373,12 +608,12 @@ h1 {
     padding: 28px;
     display: grid;
     align-content: center;
-    text-align: right;
+    text-align: left;
 }
 
 .time {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(42px, 6vw, 76px);
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: clamp(36px, 5vw, 58px);
     font-weight: 700;
     letter-spacing: 4px;
     color: var(--gold);
@@ -399,10 +634,14 @@ h1 {
     line-height: 1.7;
 }
 
+.stack {
+    display: grid;
+    gap: 18px;
+}
+
 .grid {
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) minmax(340px, 0.82fr);
-    gap: 24px;
+    gap: 18px;
     align-items: start;
 }
 
@@ -526,7 +765,7 @@ button.secondary, .ghost-button {
 
 .sidebar {
     display: grid;
-    gap: 24px;
+    gap: 18px;
 }
 
 .lore-list {
@@ -556,6 +795,58 @@ button.secondary, .ghost-button {
     overflow: auto;
 }
 
+
+.md-layout {
+    display: grid;
+    gap: 16px;
+}
+
+.md-toolbar {
+    display: grid;
+    gap: 12px;
+}
+
+.md-list {
+    display: grid;
+    gap: 8px;
+    max-height: 320px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.md-link {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 12px;
+    color: var(--text);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.04);
+    overflow-wrap: anywhere;
+}
+
+.md-link.active {
+    border-color: rgba(201, 162, 75, 0.72);
+    background: rgba(201, 162, 75, 0.12);
+}
+
+.md-editor textarea { min-height: 360px; }
+
+.markdown-preview {
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.18);
+    color: #d8d2c4;
+    line-height: 1.75;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 { color: var(--text); margin: 18px 0 10px; }
+.markdown-preview p { margin: 0 0 12px; }
+.markdown-preview ul { margin-top: 0; }
+
 .empty {
     border: 1px dashed rgba(234, 230, 220, 0.20);
     border-radius: 20px;
@@ -566,8 +857,7 @@ button.secondary, .ghost-button {
 }
 
 @media (max-width: 980px) {
-    .hero, .grid { grid-template-columns: 1fr; }
-    .clock { text-align: left; min-width: 0; }
+    .clock { min-width: 0; }
 }
 
 @media (max-width: 620px) {
@@ -587,7 +877,7 @@ button.secondary, .ghost-button {
         <div class="brand">
             <p class="eyebrow">Век Истока • интерактивная хроника</p>
             <h1>Пишите историю мира и сохраняйте её в живую летопись.</h1>
-            <p class="lead">Веб-приложение объединяет редактор сюжетов, события, флору и фауну. Записи сохраняются на сайте, отображаются ниже и могут отправляться в AI-помощник для развития сцен, описаний и лора.</p>
+            <p class="lead">Веб-приложение объединяет редактор сюжетов и markdown-базу мира. Записи сохраняются на сайте, MD-файлы можно просматривать и редактировать, а AI-помощник получает контекст из лора, событий и историй.</p>
         </div>
         <aside class="clock" aria-label="Мировое время">
             <div class="time" id="time"></div>
@@ -599,7 +889,7 @@ button.secondary, .ghost-button {
         </aside>
     </section>
 
-    <section class="grid">
+    <section class="stack">
         <div class="panel">
             <h2>Редактор хроники</h2>
             <?php if ($notice !== ''): ?>
@@ -632,7 +922,7 @@ button.secondary, .ghost-button {
                     <button type="submit" name="action" value="save_story">Сохранить в хронику</button>
                     <button class="secondary" type="submit" name="action" value="ask_ai">Попросить AI помочь</button>
                 </div>
-                <p class="hint">Для подключения Alibaba Cloud Model Studio задайте на сервере <strong>DASHSCOPE_API_KEY</strong>. По желанию можно переопределить <strong>DASHSCOPE_API_ENDPOINT</strong> и <strong>DASHSCOPE_MODEL</strong>.</p>
+                <p class="hint">Для подключения Alibaba Cloud Model Studio задайте на сервере <strong>DASHSCOPE_API_KEY</strong>. По желанию можно переопределить <strong>DASHSCOPE_API_ENDPOINT</strong>, <strong>DASHSCOPE_MODEL</strong> и <strong>DASHSCOPE_API_TIMEOUT</strong>.</p>
             </form>
 
             <?php if ($aiResult !== null): ?>
@@ -644,6 +934,49 @@ button.secondary, .ghost-button {
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <div class="panel">
+            <h2>Markdown-файлы мира</h2>
+            <div class="md-layout">
+                <div class="md-toolbar">
+                    <p class="hint">Выберите существующий `.md` или укажите новый безопасный относительный путь, например `05_STORIES/Новая_сцена.md`. Эти файлы входят в контекст AI-помощника.</p>
+                    <div class="md-list" aria-label="Список markdown-файлов">
+                        <?php foreach ($markdownFiles as $file): ?>
+                            <a class="md-link <?= $file['path'] === $selectedMarkdownPath ? 'active' : '' ?>" href="?md=<?= urlencode($file['path']) ?>">
+                                <?= e($file['path']) ?><br>
+                                <span class="hint"><?= e(number_format((float) ($file['size'] / 1024), 1)) ?> КБ • <?= e(date('d.m.Y H:i', $file['updated_at'])) ?> UTC</span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <form method="post" class="form-grid md-editor">
+                    <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>">
+                    <label>
+                        Путь MD-файла
+                        <input name="md_path" value="<?= e($selectedMarkdownPath) ?>" placeholder="05_STORIES/Новая_сцена.md">
+                    </label>
+                    <label>
+                        Содержимое MD
+                        <textarea name="md_content" placeholder="Выберите или создайте markdown-файл…"><?= e((string) ($selectedMarkdown['content'] ?? '')) ?></textarea>
+                    </label>
+                    <div class="actions">
+                        <button type="submit" name="action" value="save_md">Сохранить MD</button>
+                        <button class="secondary" type="submit" name="action" value="ask_ai_md">Попросить AI по MD</button>
+                    </div>
+                </form>
+
+                <div>
+                    <h3>Просмотр MD</h3>
+                    <?php if ($selectedMarkdown === null): ?>
+                        <div class="empty">Markdown-файл не выбран.</div>
+                    <?php else: ?>
+                        <p class="hint">Открыт: <?= e($selectedMarkdown['path']) ?></p>
+                        <div class="markdown-preview"><?= $markdownPreviewHtml ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <aside class="sidebar">
