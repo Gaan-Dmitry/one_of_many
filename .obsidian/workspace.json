@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01_WORLD/Карта/Горы Скорби.md",
+                "file": "Site/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Горы Скорби"
+              "title": "README"
             }
           }
         ]
@@ -203,6 +203,7 @@
   },
   "active": "9b13af824d609220",
   "lastOpenFiles": [
+    "01_WORLD/Карта/Горы Скорби.md",
     "Bot/README.md",
     "Site/README.md",
     "Site/index 1.php",
@@ -222,7 +223,6 @@
     "01_WORLD/Карта/Новгород-на-Кривой.md",
     "01_WORLD/Карта/Карта мира.md",
     "01_WORLD/Карта/Залив Ракушек.md",
-    "01_WORLD/Карта/Горы Скорби.md",
     "01_WORLD/Карта",
     "Без названия.md",
     "01_WORLD/Фракции/Кланы Двуречья/Кланы Двуречья.md",
