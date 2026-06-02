@@ -11,10 +11,14 @@
             "id": "9b13af824d609220",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "01_WORLD/Флора и Фауна.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Новая вкладка"
+              "title": "Флора и Фауна"
             }
           }
         ]
@@ -197,7 +201,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ab5ab6e23000ac5a",
+  "active": "9b13af824d609220",
   "lastOpenFiles": [
     "Без названия.md",
     "01_WORLD/Фракции/Кланы Двуречья/Кланы Двуречья.md",
