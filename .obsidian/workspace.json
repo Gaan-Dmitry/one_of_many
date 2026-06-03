@@ -11,10 +11,14 @@
             "id": "ff3aceb4e38cfc2b",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "06_WORLD_STATE/Фракции состояние.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Новая вкладка"
+              "title": "Фракции состояние"
             }
           }
         ]
@@ -188,8 +192,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "ab5ab6e23000ac5a",
+  "active": "ff3aceb4e38cfc2b",
   "lastOpenFiles": [
+    "06_WORLD_STATE/Текущая дата мира.md",
+    "06_WORLD_STATE/Активные события.md",
     "Один из многих.zip",
     "copilot/copilot-conversations/Изучи_данную_историю@20260602_235601.md",
     "copilot/copilot-conversations/Изучи_историю@20260602_235600.md",
@@ -219,13 +225,11 @@
     "07_WORLD/Карта/Флора и Фауна.md",
     "08_FRACTION/Фракции - Морской Союз.md",
     "08_FRACTION/Фракции - Орда Трёх Костров.md",
-    "00_CORE/Цена_силы.md",
     "08_FRACTION",
     "40_ITEMS",
     "30_FLORA_FAUNA",
     "20_ABILITIES",
     "10_CHARACTERS",
-    "Site/index 1.php",
     "05_VISUALS/Карты/Карта v.1.png",
     "05_VISUALS/Лого/Лого.png",
     "Без названия.canvas",
