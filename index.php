@@ -73,17 +73,11 @@ function active_nav(string $page, string $current): string
 </head>
 <body data-epoch="<?= (int) $config['world_epoch'] ?>" data-speed="<?= (int) $config['speed'] ?>">
 <div class="app-shell">
-    <aside class="game-sidebar">
+    <header class="game-header">
         <a class="sigil" href="<?= h(url_for('dashboard')) ?>">
             <img src="MD/05_VISUALS/Лого/Лого.png" alt="Логотип Века Истока">
             <span><b>Век Истока</b><small>World Master Console</small></span>
         </a>
-
-        <div class="time-orb <?= $world['isDay'] ? 'is-day' : 'is-night' ?>">
-            <span><?= $world['isDay'] ? 'День Истока' : 'Ночь Истока' ?></span>
-            <strong id="world-clock">00:00:00</strong>
-            <small><?= h($world['date']) ?> • <?= h($world['monthName']) ?> • год <?= h($world['year']) ?></small>
-        </div>
 
         <nav class="main-nav" aria-label="Главная навигация">
             <a class="<?= active_nav($page, 'dashboard') ?>" href="<?= h(url_for('dashboard')) ?>"><span>✧</span>Командный зал</a>
@@ -94,11 +88,21 @@ function active_nav(string $page, string $current): string
             <a class="<?= active_nav($page, 'systems') ?>" href="<?= h(url_for('systems')) ?>"><span>⚙</span>Системы мира</a>
         </nav>
 
-        <div class="sidebar-footer">
-            <b><?= count($files) ?></b>
-            <span>записей в хранилище MD</span>
+        <div class="header-right">
+            <div class="time-orb <?= $world['isDay'] ? 'is-day' : 'is-night' ?>">
+                <div class="time-orb-info">
+                    <span><?= $world['isDay'] ? 'День Истока' : 'Ночь Истока' ?></span>
+                    <small><?= h($world['date']) ?> • <?= h($world['monthName']) ?> • год <?= h($world['year']) ?></small>
+                </div>
+                <strong id="world-clock">00:00:00</strong>
+            </div>
+
+            <div class="sidebar-footer">
+                <b><?= count($files) ?></b>
+                <span>MD</span>
+            </div>
         </div>
-    </aside>
+    </header>
 
     <main class="game-main">
         <?php if (isset($_GET['saved'])): ?><div class="toast success">Запись сохранена в Markdown-хранилище.</div><?php endif; ?>
@@ -133,7 +137,7 @@ function active_nav(string $page, string $current): string
                 <?php endforeach; ?>
             </section>
 
-            <section class="two-column">
+            <section class="two-column full-width">
                 <div class="game-panel">
                     <div class="panel-title"><span>Последние изменения</span><a href="<?= h(url_for('codex')) ?>">Все записи</a></div>
                     <div class="quest-list">
@@ -144,10 +148,6 @@ function active_nav(string $page, string $current): string
                             </a>
                         <?php endforeach; ?>
                     </div>
-                </div>
-                <div class="game-panel advice-card">
-                    <div class="panel-title"><span>Совет по данным</span></div>
-                    <p><b>Markdown оставляем как источник правды.</b> Это удобно для Obsidian, Git и ручного редактирования. <b>SQLite</b> лучше добавить следующим слоем: быстрый поиск, связи «персонаж → локация → предмет», статусы фракций и игровые фильтры. MySQL/phpMyAdmin для личного редактора сейчас лишний.</p>
                 </div>
             </section>
         <?php endif; ?>

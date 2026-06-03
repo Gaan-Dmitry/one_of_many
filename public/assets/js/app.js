@@ -52,6 +52,11 @@ document.querySelectorAll('input[name="template"]').forEach((radio) => {
         if (radio.checked && category && select) {
             select.value = category;
         }
+        // Highlight selected card
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        radio.closest('.template-card').classList.add('selected');
     });
 });
 
