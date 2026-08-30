@@ -1,0 +1,6 @@
+{
+  "name": "Век Истока - Хронометр",
+  "description": "Интерактивный сайт-хронометр и часы игрового мира Век Истока (Один из многих) с расчетом игрового времени и динамическими эффектами.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

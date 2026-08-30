@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Век Истока - Хронометр</title>
+<meta name="description" content="Интерактивный сайт-хронометр и часы игрового мира Век Истока (Один из многих) с расчетом игрового времени и динамическими эффектами.">
+<meta property="og:title" content="Век Истока - Хронометр">
+<meta property="og:description" content="Интерактивный сайт-хронометр и часы игрового мира Век Истока (Один из многих) с расчетом игрового времени и динамическими эффектами.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #05060a;
+  color: #eae6dc;
+  font-family: 'Unbounded', sans-serif;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+}
+
+/* ===== фон ===== */
+.bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(201, 162, 75, 0.15), transparent 45%),
+    linear-gradient(180deg, #05060a, #0a0d14);
+}
+
+/* ===== частицы ===== */
+canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== центр ===== */
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+}
+
+/* ===== время ===== */
+.time {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(48px, 12vw, 120px);
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #c9a24b;
+  text-shadow: 0 0 35px rgba(201, 162, 75, 0.4);
+  line-height: 1.1;
+}
+
+/* ===== цикл ===== */
+.cycle {
+  margin-top: 14px;
+  font-size: clamp(11px, 2.5vw, 14px);
+  letter-spacing: 5px;
+  font-weight: 500;
+  transition: color 0.5s ease;
+}
+
+/* ===== дата ===== */
+.date {
+  margin-top: 14px;
+  font-size: clamp(16px, 3.5vw, 22px);
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.epoch {
+  margin-top: 8px;
+  font-size: clamp(11px, 2vw, 14px);
+  opacity: 0.7;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg" id="bg"></div>
+<canvas id="fx"></canvas>
+
+<div class="center" id="clock-container">
+  <div class="time" id="time">--:--:--</div>
+  <div class="cycle" id="cycle">ДЕНЬ ИСТОКА</div>
+  <div class="date">
+    <span id="date-val">01.01.01</span><br>
+    <div class="epoch" id="epoch-val">Месяц: Лютохлад • Век Истока</div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   СТАБИЛЬНАЯ МОДЕЛЬ ВРЕМЕНИ
+   ========================= */
+
+const WORLD_EPOCH = new Date("2026-06-01T00:00:00Z").getTime();
+const SPEED = 5;
+
+const MONTHS = [
+  "Лютохлад", "Ветровей", "Таловод",
+  "Зеленорост", "Цветель", "Влажник",
+  "Ярило", "Зрельник", "Страдник",
+  "Листопад", "Грязовец", "Студень"
+];
+
+const timeEl = document.getElementById("time");
+const cycleEl = document.getElementById("cycle");
+const dateEl = document.getElementById("date-val");
+const epochEl = document.getElementById("epoch-val");
+
+function updateTime() {
+  const now = Date.now();
+  const elapsedSec = (now - WORLD_EPOCH) / 1000;
+  const worldSec = elapsedSec * SPEED;
+
+  const worldDays = Math.floor(worldSec / 86400);
+  const year = Math.floor(worldDays / 360) + 1;
+
+  const dayOfYear = ((worldDays % 360) + 360) % 360;
+  const month = Math.floor(dayOfYear / 30);
+  const day = (dayOfYear % 30) + 1;
+
+  const secOfDay = Math.floor(((worldSec % 86400) + 86400) % 86400);
+
+  const h = Math.floor(secOfDay / 3600);
+  const m = Math.floor((secOfDay % 3600) / 60);
+  const s = Math.floor(secOfDay % 60);
+
+  const isDay = (h >= 6 && h < 18);
+
+  timeEl.innerText =
+    String(h).padStart(2, '0') + ":" +
+    String(m).padStart(2, '0') + ":" +
+    String(s).padStart(2, '0');
+
+  cycleEl.innerText = isDay ? "ДЕНЬ ИСТОКА" : "НОЧЬ ИСТОКА";
+  cycleEl.style.color = isDay ? "#c9a24b" : "#4aa3ff";
+
+  const dStr = String(day).padStart(2, '0');
+  const mStr = String(month + 1).padStart(2, '0');
+  const yStr = String(year).padStart(2, '0');
+
+  dateEl.innerText = `${dStr}.${mStr}.${yStr}`;
+  epochEl.innerText = `Месяц: ${MONTHS[month] || MONTHS[0]} • Век Истока`;
+
+  requestAnimationFrame(updateTime);
+}
+
+updateTime();
+
+/* =========================
+   ПАРАЛЛАКС ФОНА
+   ========================= */
+document.addEventListener("mousemove", (e) => {
+  const x = (e.clientX / window.innerWidth) * 100;
+  const y = (e.clientY / window.innerHeight) * 100;
+
+  document.documentElement.style.setProperty("--mx", x + "%");
+  document.documentElement.style.setProperty("--my", y + "%");
+});
+
+/* =========================
+   ЧАСТИЦЫ ИСТОКА (ЧИСТЫЕ)
+   ========================= */
+const canvas = document.getElementById("fx");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+
+const particles = [];
+const particleCount = 120;
+
+for (let i = 0; i < particleCount; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.6 + 0.4,
+    d: Math.random() * 1.2 + 0.3
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "rgba(201, 162, 75, 0.18)";
+
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    p.y -= 0.25 + p.d;
+    p.x += Math.sin(p.y * 0.01) * 0.3;
+
+    if (p.y < 0) {
+      p.y = canvas.height;
+      p.x = Math.random() * canvas.width;
+    }
+  });
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+
+window.addEventListener("resize", () => {
+  resizeCanvas();
+});
+</script>
+
+</body>
+</html>
